@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -24,7 +24,7 @@ jobs:
       - name: Print Flutter version
         run: flutter --version
 
-      - name: Create Flutter project
+      - name: Create  Flutter project
         run: |
           flutter create flutter_so
           cd flutter_so
@@ -35,13 +35,14 @@ jobs:
           cd flutter_so
           flutter build apk --release --target-platform android-arm,android-arm64
 
-      - name: List build output
-        run: |
-          cd flutter_so/build
-          find . -name "*.apk"
-
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
+      - name: Upload libflutter.so for arm64
+        uses: actions/upload-artifact@v2
         with:
-          name: flutter_release_apk
-          path: flutter_so/build/app/outputs/flutter/release/app-release.apk
+          name: libflutter_so_arm64
+          path: flutter_so/build/app/intermediates/merged_native_libs/release/out/lib/arm64-v8a/libflutter.so
+
+      - name: Upload libflutter.so for armeabi-v7a
+        uses: actions/upload-artifact@v2
+        with:
+          name: libflutter_so_armeabi_v7a
+          path: flutter_so/build/app/intermediates/merged_native_libs/release/out/lib/armeabi-v7a/libflutter.so
