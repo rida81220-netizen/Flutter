@@ -24,38 +24,53 @@ jobs:
       - name: Print Flutter version
         run: flutter --version
 
+      # Detect project folder automatically
+      - name: Detect Flutter project folder
+        id: detect_folder
+        run: |
+          if [ -f "pubspec.yaml" ]; then
+            echo "project_dir=." >> $GITHUB_OUTPUT
+          else
+            folder=$(find . -maxdepth 2 -name "pubspec.yaml" -exec dirname {} \;)
+            if [ -z "$folder" ]; then
+              echo "Error: Could not find pubspec.yaml!"
+              exit 1
+            fi
+            echo "project_dir=$folder" >> $GITHUB_OUTPUT
+          fi
+
       - name: Get Flutter dependencies
-        working-directory: my_flutter_app
+        working-directory: ${{ steps.detect_folder.outputs.project_dir }}
         run: flutter pub get
 
       - name: Build APK for arm64 and armeabi-v7a
-        working-directory: my_flutter_app
+        working-directory: ${{ steps.detect_folder.outputs.project_dir }}
         run: flutter build apk --release --target-platform android-arm,android-arm64
 
       - name: Build AAB
-        working-directory: my_flutter_app
+        working-directory: ${{ steps.detect_folder.outputs.project_dir }}
         run: flutter build appbundle --release
 
       - name: Upload libflutter.so for arm64
         uses: actions/upload-artifact@v4
         with:
           name: libflutter_so_arm64
-          path: my_flutter_app/build/app/intermediates/flutter/release/arm64-v8a/libflutter.so
+          path: ${{ steps.detect_folder.outputs.project_dir }}/build/app/intermediates/flutter/release/arm64-v8a/libflutter.so
 
       - name: Upload libflutter.so for armeabi-v7a
         uses: actions/upload-artifact@v4
         with:
           name: libflutter_so_armeabi_v7a
-          path: my_flutter_app/build/app/intermediates/flutter/release/armeabi-v7a/libflutter.so
+          path: ${{ steps.detect_folder.outputs.project_dir }}/build/app/intermediates/flutter/release/armeabi-v7a/libflutter.so
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: my_flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          path: ${{ steps.detect_folder.outputs.project_dir }}/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
-          path: my_flutter_app/build/app/outputs/bundle/release/app-release.aab
+          path: ${{ steps.detect_folder.outputs.project_dir }}/build/app/outputs/bundle/release/app-release.aab
